@@ -60,7 +60,9 @@ def semantic_similarity(
         convert_to_numpy=True,
         normalize_embeddings=True,
     )
-    return float(cosine_similarity(embeddings[0:1], embeddings[1:2])[0, 0])
+    score = float(cosine_similarity(embeddings[0:1], embeddings[1:2])[0, 0])
+    # Avoid tiny floating-point errors causing the scorer to receive a value outside [-1, 1].
+    return max(-1.0, min(1.0, score))
 
 
 # Run one English-to-target-language round trip and save its scored rows.
@@ -121,7 +123,10 @@ def run_experiment(
 # Run both language experiments, write their separate CSVs, and combine the results.
 def run_pipeline(input_path: Path = INPUT_PATH) -> pd.DataFrame:
     """Create French, Swahili, and combined result CSV files."""
+    input_path = Path(input_path)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     model = load_similarity_model()
+
     french_results = run_experiment(
         language="French",
         translate_to=english_to_french,
@@ -139,9 +144,11 @@ def run_pipeline(input_path: Path = INPUT_PATH) -> pd.DataFrame:
         output_path=RESULTS_DIR / "swahili_results.csv",
     )
 
-    final_results = pd.concat([french_results, swahili_results], ignore_index=True)
+    # Keep the combined CSV's schema and column order consistent with each language CSV.
+    final_results = pd.concat(
+        [french_results, swahili_results], ignore_index=True
+    ).reindex(columns=OUTPUT_COLUMNS)
     final_path = RESULTS_DIR / "final_results.csv"
-    final_path.parent.mkdir(parents=True, exist_ok=True)
     final_results.to_csv(final_path, index=False)
     return final_results
 
@@ -150,4 +157,6 @@ def run_pipeline(input_path: Path = INPUT_PATH) -> pd.DataFrame:
 if __name__ == "__main__":
     results = run_pipeline()
     print(f"Processed {len(results)} rows across French and Swahili experiments.")
-    print(f"Results saved to {RESULTS_DIR}")
+    print(f"French results: {RESULTS_DIR / 'french_results.csv'}")
+    print(f"Swahili results: {RESULTS_DIR / 'swahili_results.csv'}")
+    print(f"Combined results: {RESULTS_DIR / 'final_results.csv'}")
