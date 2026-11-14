@@ -1,28 +1,16 @@
 # MeaningGuard
 
-MeaningGuard measures meaning loss during AI translation and highlights cases
-where a round-trip translation may have lost important meaning. This research
-prototype compares English text with its English back-translation after
-translation into French or Swahili.
+MeaningGuard measures meaning loss during AI translation and highlights cases where a round\-trip translation may have lost important meaning. This research project compares English text with its English back\-translation after translation into French or Swahili.
 
 ## Project Overview
 
-MeaningGuard explores how different kinds of language fare during AI
-translation. Each input passes through an English-to-target-language-to-English
-workflow, and an embedding-based similarity score estimates how closely the
-back-translation preserves the source meaning. The score is converted into a
-meaning-loss value and a Low, Medium, or High risk category.
+MeaningGuard explores how different types of language behave during AI translation. Each input passes through an English → target language → English workflow, and an embedding\-based similarity score estimates how closely the back\-translation preserves the original meaning. The similarity score is converted into a meaning\-loss value and a Low, Medium, or High risk category.
 
-The current repository provides a batch analysis pipeline and visualizations;
-it does not include a deployed user-facing warning interface.
+The current repository provides a batch analysis pipeline and visualizations. It does not include a deployed user\-facing warning interface.
 
 ## Problem Statement
 
-Machine translation can preserve the general topic of a sentence while
-changing nuance, intent, or non-literal meaning. Idioms, slang, sarcasm, and
-indirect speech may be especially sensitive to these shifts. MeaningGuard
-investigates whether a consistent round-trip scoring workflow can help surface
-potential meaning loss for further review.
+Machine translation can preserve the general topic of a sentence while changing nuance, intent, or non\-literal meaning. Idioms, slang, sarcasm, and indirect speech may be especially sensitive to these shifts. MeaningGuard investigates whether a consistent round\-trip scoring workflow can help identify potential meaning loss for further review.
 
 ## Research Question
 
@@ -30,266 +18,250 @@ potential meaning loss for further review.
 
 ## Core Innovation
 
-MeaningGuard combines a multilingual translation model with semantic
-similarity scoring to provide a simple, comparable signal of meaning
-preservation. It evaluates examples across multiple language categories and
-target languages, then summarizes scores with category comparisons, language
-comparisons, and risk classifications.
+MeaningGuard combines a multilingual translation model with semantic similarity scoring to provide a simple, comparable signal of meaning preservation. It evaluates examples across multiple language categories and target languages, then summarizes scores through category comparisons, language comparisons, and risk classifications.
 
-The score is an automated screening signal, not a guarantee of correctness or
-a replacement for human review.
+The score is an automated screening signal, not a guarantee of correctness or a replacement for human review.
 
 ## Methodology
 
 For each English dataset example, MeaningGuard:
 
-1. Translates the text from English into French or Swahili using NLLB-200.
-2. Translates the result back into English using NLLB-200.
-3. Encodes the original and back-translated English text with
-   `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
+1. Translates the text from English into French or Swahili using NLLB\-200.
+2. Translates the result back into English using NLLB\-200.
+3. Encodes the original and back\-translated English text using sentence\-transformers/paraphrase\-multilingual\-MiniLM\-L12\-v2.
 4. Calculates normalized cosine similarity between the sentence embeddings.
 5. Computes meaning loss and assigns a risk category.
 
 The scoring formula is:
 
-```text
-Meaning Loss = (1 - similarity) × 100
-```
+Meaning Loss = (1 \- similarity) × 100
 
-Here, `similarity` is normalized to the range `[0, 1]`; lower similarity
-therefore produces a higher meaning-loss score. The project classifies scores
-below 20 as Low risk, scores from 20 to below 40 as Medium risk, and scores of
-40 or above as High risk.
+Here, similarity is normalized to the range [0, 1]; lower similarity therefore produces a higher meaning\-loss score.
 
-For additional detail, see [docs/methodology.md](docs/methodology.md).
+Risk levels are defined as:
+
+Low:    < 20
+
+Medium: 20–39.99
+
+High:   40\+
+
+These thresholds were defined for this project and have not yet been validated against human evaluations. They should be interpreted as an exploratory screening system rather than a definitive measurement of translation quality.
+
+For additional details, see docs/methodology.md.
 
 ## Technology Stack
 
-- **Translation:** Meta NLLB-200 (`facebook/nllb-200-distilled-600M`)
-- **Semantic similarity:** Sentence Transformers,
-  `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
-- **Machine learning runtime:** PyTorch and Transformers
-- **Data processing:** Python, pandas, and NumPy
-- **Visualizations:** Matplotlib and Seaborn
+- **Translation:** Meta NLLB\-200 (facebook/nllb\-200\-distilled\-600M)
+- **Semantic Similarity:** Sentence Transformers (sentence\-transformers/paraphrase\-multilingual\-MiniLM\-L12\-v2)
+- **Machine Learning Runtime:** PyTorch and Transformers
+- **Data Processing:** Python, pandas, and NumPy
+- **Visualization:** Matplotlib and Seaborn
 
 ## Dataset Description
 
-The pipeline uses [`data/meaningguard_dataset.csv`](data/meaningguard_dataset.csv),
-which contains 125 English examples, balanced across five categories:
+The pipeline uses data/meaningguard\_dataset.csv, which contains 125 English examples balanced across five categories:
 
 | Category | Examples |
-|---|---:|
-| Literal language | 25 |
+| --- | --- |
+| Literal Language | 25 |
 | Idiom | 25 |
 | Sarcasm | 25 |
 | Slang | 25 |
-| Indirect speech | 25 |
+| Indirect Speech | 25 |
 
-Each example has an ID, category label, and English text. Both target-language
-experiments use the same source examples, resulting in 250 translation
-observations: 125 French and 125 Swahili. The 125 sentences were manually
-created and evenly divided among the five categories. See the
-[dataset documentation](docs/dataset.md) for its structure, creation process,
-and limitations.
+Each example contains:
+
+- ID
+- Category label
+- English text
+
+Both target\-language experiments use the same source examples, resulting in **250 total translation observations**:
+
+- 125 French
+- 125 Swahili
+
+The dataset was manually created and evenly distributed across the five categories. Additional information is available in docs/dataset.md.
 
 ## Repository Structure
 
-```text
 MeaningGuard/
+
 ├── data/
-│   └── meaningguard_dataset.csv
+
+│   └── meaningguard\_dataset.csv
+
 ├── docs/
-│   ├── dataset.md
-│   ├── demo_script.md
-│   ├── findings.md
-│   └── methodology.md
+
+│   ├── dataset.md
+
+│   ├── demo\_script.md
+
+│   ├── findings.md
+
+│   └── methodology.md
+
 ├── results/
-│   ├── final_results.csv
-│   ├── french_results.csv
-│   └── swahili_results.csv
+
+│   ├── final\_results.csv
+
+│   ├── french\_results.csv
+
+│   └── swahili\_results.csv
+
 ├── src/
-│   ├── run_pipeline.py
-│   ├── scoring.py
-│   ├── similarity.py
-│   └── translate.py
+
+│   ├── run\_pipeline.py
+
+│   ├── scoring.py
+
+│   ├── similarity.py
+
+│   └── translate.py
+
 ├── visualizations/
-│   ├── category_loss.png
-│   ├── create_charts.py
-│   ├── heatmap.png
-│   ├── language_comparison.png
-│   └── risk_distribution.png
-└── requirements.txt
-```
+
+│   ├── category\_loss.png
+
+│   ├── create\_charts.py
+
+│   ├── heatmap.png
+
+│   ├── language\_comparison.png
+
+│   └── risk\_distribution.png
+
+├── requirements.txt
+
+└── README.md
 
 ## Installation
 
-Use Python 3.10 or later. From the repository root, create and activate a
-virtual environment, then install the dependencies:
+Use Python 3.10 or later.
 
-```bash
-python -m venv .venv
-```
+Create and activate a virtual environment:
 
-On macOS or Linux:
+python \-m venv .venv
 
-```bash
+macOS / Linux:
+
 source .venv/bin/activate
-```
 
-On Windows PowerShell:
+Windows PowerShell:
 
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
+.\\.venv\\Scripts\\Activate.ps1
 
-Install project requirements:
+Install dependencies:
 
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
+python \-m pip install \-r requirements.txt
 
-The first pipeline run downloads the translation and similarity model
-checkpoints. An internet connection and sufficient disk space are required
-unless the model files are already cached.
+The first run downloads model files, so an internet connection is required unless they have already been cached.
 
 ## Running the Pipeline
 
-From the repository root, run:
+Run:
 
-```bash
-python src/run_pipeline.py
-```
+python src/run\_pipeline.py
 
-The pipeline processes every dataset row in French and Swahili experiments.
-It writes each language's CSV after that experiment completes, then writes
-the combined file after both experiments finish:
+This generates:
 
-- `results/french_results.csv`
-- `results/swahili_results.csv`
-- `results/final_results.csv`
+results/french\_results.csv
 
-Each result row includes the source and translated texts, semantic similarity,
-meaning-loss score, and risk classification.
+results/swahili\_results.csv
 
-To regenerate the charts after running the pipeline:
+results/final\_results.csv
 
-```bash
-python visualizations/create_charts.py
-```
+Each row contains:
+
+- Original text
+- Translation
+- Back translation
+- Similarity score
+- Meaning\-loss score
+- Risk classification
+
+To regenerate visualizations:
+
+python visualizations/create\_charts.py
 
 ## Visualizations
 
-The following charts are available in [`visualizations/`](visualizations/):
+MeaningGuard generates:
 
-### Average Meaning Loss by Category
+- Average Meaning Loss by Category
+- Average Meaning Loss by Language
+- Risk Distribution
+- Average Meaning Loss by Language and Category
 
-![Bar chart showing average meaning loss by category](visualizations/category_loss.png)
-
-### Average Meaning Loss by Language
-
-![Bar chart comparing average meaning loss for French and Swahili](visualizations/language_comparison.png)
-
-### Risk Distribution
-
-![Bar chart showing the distribution of Low, Medium, and High risk results](visualizations/risk_distribution.png)
-
-### Average Meaning Loss by Language and Category
-
-![Heatmap of average meaning loss by language and category](visualizations/heatmap.png)
+All generated charts are stored in the visualizations/ folder.
 
 ## Results
 
-The current output contains **250 total translations**: **125 French** and
-**125 Swahili**. The highest category-average meaning loss was observed for
-slang; the lowest was observed for literal language.
+The current experiment produced **250 translations**:
+
+- 125 French
+- 125 Swahili
 
 ### Average Meaning Loss by Category
 
-| Category | Average meaning loss |
-|---|---:|
+| Category | Average Meaning Loss |
+| --- | --- |
 | Slang | 9.294 |
 | Idiom | 9.100 |
 | Sarcasm | 6.542 |
-| Indirect speech | 5.300 |
-| Literal language | 3.316 |
+| Indirect Speech | 5.300 |
+| Literal Language | 3.316 |
 
 ### Average Meaning Loss by Language
 
-| Language | Average meaning loss |
-|---|---:|
+| Language | Average Meaning Loss |
+| --- | --- |
 | Swahili | 8.105 |
 | French | 5.316 |
 
 ### Risk Distribution
 
-| Risk level | Translations | Percentage |
-|---|---:|---:|
+| Risk Level | Count | Percentage |
+| --- | --- | --- |
 | Low | 237 | 94.8% |
 | Medium | 13 | 5.2% |
 | High | 0 | 0.0% |
 
-These are descriptive results for the current dataset and model configuration.
-Read the full [findings summary](docs/findings.md) for interpretation and
-caveats.
+### Key Findings
+
+- Slang produced the highest average meaning loss.
+- Literal language produced the lowest average meaning loss.
+- Swahili showed higher meaning loss than French across every category in this dataset.
+- Most translations remained in the Low\-Risk category.
+
+Full analysis is available in docs/findings.md.
 
 ## Limitations
 
-- Back translation is an indirect way to assess meaning preservation and may
-  reflect errors from either translation direction.
-- Embedding similarity is an automated proxy; it may not capture pragmatic
-  intent, cultural context, factual correctness, or all forms of nuance.
-- The dataset is small and balanced across its five categories, and its
-  provenance and annotation process are not documented.
-- Only French and Swahili are evaluated, using one translation model and one
-  similarity model.
-- The risk thresholds are project-defined and have not been documented as
-  calibrated against human judgments or downstream impact.
-- The reported comparisons are descriptive; they do not establish statistical
-  significance or generalize to all text or translation systems.
+- Back translation is an indirect measure of meaning preservation and may reflect errors from either translation direction.
+- Embedding similarity is an automated proxy and may not capture all forms of nuance, intent, or cultural context.
+- The dataset is relatively small and consists of manually created examples.
+- Only French and Swahili were evaluated.
+- Only one translation model and one similarity model were tested.
+- Risk thresholds have not been calibrated against human judgments.
+- Findings are descriptive and should not be interpreted as statistically significant conclusions.
 
 ## Future Work
 
-- Expand the dataset and document its sourcing and annotation guidelines.
-- Add more languages, translation systems, and translation directions.
-- Compare automated scores with expert and native-speaker judgments.
-- Evaluate score reliability and calibrate risk thresholds against human
-  assessment.
-- Analyze performance by category, language, and relevant text characteristics
-  with appropriate statistical methods.
-- Build an interactive interface that lets users review flagged translations
-  and their source context.
+- Expand the dataset and document annotation guidelines.
+- Add more languages and translation systems.
+- Compare automated scores with native\-speaker evaluations.
+- Calibrate risk thresholds using human judgments.
+- Investigate statistical significance across categories.
+- Build an interactive translation\-risk warning interface.
 
-## Authors
+## Author
 
-### Project
-
-**MeaningGuard** — a high school hackathon research project exploring meaning
-preservation in AI translation.
-
-### Team
-
-- **Team name:** [Insert team name]
-- **School or organization:** [Insert school or organization]
-- **Team members:** [Insert member names]
-- **Hackathon:** [Insert hackathon name and year]
+### Joaquin Eduardo Pardo Gomez
+### joaquinepardorojas@gmail.com
+### J.L. Mann High School
+MeaningGuard is a solo research project created for the Veritas AI International High School Hackathon 2026.
 
 ### Repository
 
-[github.com/Joawyo/MeaningGuard](https://github.com/Joawyo/MeaningGuard)
-
-### Contributions
-
-The team collaboratively developed MeaningGuard, including:
-
-- Formulating the research question and creating a balanced, hand-crafted
-  English dataset.
-- Implementing the English-to-French and English-to-Swahili translation
-  round-trip pipeline.
-- Measuring semantic similarity, calculating meaning-loss scores, and
-  assigning project-defined risk categories.
-- Analyzing the results and creating visualizations and project
-  documentation.
-
-Replace the placeholders above with the participating students' and team's
-details before submission.
+[https://github.com/Joawyo/MeaningGuard](https://github.com/Joawyo/MeaningGuard)
