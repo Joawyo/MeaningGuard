@@ -23,7 +23,7 @@ def semantic_similarity(
     sentence_b: str,
     model: SentenceTransformer | None = None,
 ) -> float:
-    """Return cosine similarity in the range [-1, 1] for two sentences."""
+    """Return normalized cosine similarity in the range [0, 1]."""
     if not isinstance(sentence_a, str) or not isinstance(sentence_b, str):
         raise TypeError("Both sentences must be strings")
     if not sentence_a.strip() or not sentence_b.strip():
@@ -37,9 +37,13 @@ def semantic_similarity(
         convert_to_numpy=True,
         normalize_embeddings=True,
     )
-    cosine_score = float(np.dot(embeddings[0], embeddings[1]))
-    # Clamp floating-point noise while preserving the full cosine range.
-    return max(-1.0, min(1.0, cosine_score))
+    raw_cosine = float(np.dot(embeddings[0], embeddings[1]))
+    # Clamp minor floating-point error while retaining valid cosine similarity.
+    raw_cosine = max(-1.0, min(1.0, raw_cosine))
+    # Normalize [-1, 1] to [0, 1] to match scoring.meaning_loss() validation
+    # and keep the resulting meaning-loss score on its intended 0-100 scale.
+    normalized_similarity = (raw_cosine + 1.0) / 2.0
+    return normalized_similarity
 
 
 # Provide an alternate descriptive name for callers that prefer it.
