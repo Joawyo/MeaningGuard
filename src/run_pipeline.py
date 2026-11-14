@@ -1,15 +1,14 @@
 """Run MeaningGuard English round-trip experiments for French and Swahili."""
 
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 try:
     # Support importing this module as part of the src package.
     from .scoring import meaning_loss, risk_level
+    from .similarity import load_similarity_model, semantic_similarity
     from .translate import (
         english_to_french,
         french_to_english,
@@ -19,6 +18,7 @@ try:
 except ImportError:
     # Support running it directly with `python src/run_pipeline.py`.
     from scoring import meaning_loss, risk_level
+    from similarity import load_similarity_model, semantic_similarity
     from translate import (
         english_to_french,
         french_to_english,
@@ -30,7 +30,6 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INPUT_PATH = PROJECT_ROOT / "data" / "meaningguard_dataset.csv"
 RESULTS_DIR = PROJECT_ROOT / "results"
-SIMILARITY_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 OUTPUT_COLUMNS = [
     "id",
     "category",
@@ -44,33 +43,12 @@ OUTPUT_COLUMNS = [
 ]
 
 
-# Load a multilingual sentence-embedding model once for all similarity comparisons.
-def load_similarity_model() -> SentenceTransformer:
-    """Load and return the multilingual model used to embed sentences."""
-    return SentenceTransformer(SIMILARITY_MODEL_NAME)
-
-
-# Embed the original and back-translated sentences and compare their vectors.
-def semantic_similarity(
-    original_text: str, back_translation: str, model: SentenceTransformer
-) -> float:
-    """Return cosine similarity between two sentences' multilingual embeddings."""
-    embeddings = model.encode(
-        [original_text, back_translation],
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-    )
-    score = float(cosine_similarity(embeddings[0:1], embeddings[1:2])[0, 0])
-    # Avoid tiny floating-point errors causing the scorer to receive a value outside [-1, 1].
-    return max(-1.0, min(1.0, score))
-
-
 # Run one English-to-target-language round trip and save its scored rows.
 def run_experiment(
     language: str,
     translate_to: Callable[[str], str],
     translate_back: Callable[[str], str],
-    model: SentenceTransformer,
+    model: Any,
     input_path: Path = INPUT_PATH,
     output_path: Path | None = None,
 ) -> pd.DataFrame:
