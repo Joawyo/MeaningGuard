@@ -204,19 +204,3 @@ or model pages where available.
   - The 125 manually created English examples used as pipeline input. The
     repository identifies this as a project-created dataset; no external
     dataset source was found.
-
-### AI Assistance
-
-No AI assistant use is identified in the repository contents, so no
-assistant is credited here. Add an acknowledgement if project records
-confirm an assistant was used.
-
-### Documentation Credits to Add
-
-Before this section, the repository named the models and summarized its
-technology stack but did not provide official source links for the models or
-libraries. Those source links are now recorded above. The dataset is
-described as manually created, with no external dataset source identified.
-The `scikit-learn` dependency is declared but has no direct use in the
-current implementation; remove it from `requirements.txt` if it is not
-needed, rather than describing it as an actively used library.
