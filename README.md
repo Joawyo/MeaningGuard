@@ -255,11 +255,16 @@ Full analysis is available in docs/findings.md.
 - Investigate statistical significance across categories.
 - Build an interactive translation\-risk warning interface.
 
-## Author
+## AI Assistance
 
-### Joaquin Eduardo Pardo Gomez
-### joaquinepardorojas@gmail.com
-### J.L. Mann High School
+GitHub Copilot ([github.com/features/copilot](https://github.com/features/copilot))
+provided code suggestions, debugging assistance, documentation support, and
+repository review. Microsoft Copilot
+([copilot.microsoft.com](https://copilot.microsoft.com/)) assisted with
+project planning. These tools provided assistance only. The project author
+created the dataset, ran the experiments, analyzed the results, and made all
+final project decisions.
+
 MeaningGuard is a solo research project created for the Veritas AI International High School Hackathon 2026.
 
 ### Repository
